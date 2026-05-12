@@ -1,0 +1,6 @@
+{
+  "mobile":  { "width": 375,  "height": 812,  "label": "iPhone SE"    },
+  "tablet":  { "width": 768,  "height": 1024, "label": "iPad"         },
+  "laptop":  { "width": 1280, "height": 800,  "label": "Laptop"       },
+  "desktop": { "width": 1920, "height": 1080, "label": "Full HD"      }
+}

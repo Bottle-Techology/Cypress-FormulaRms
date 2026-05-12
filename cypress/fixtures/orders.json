@@ -1,0 +1,11 @@
+{
+  "statuses": ["pending", "preparing", "ready", "completed", "cancelled"],
+  "sampleOrder": {
+    "note": "No onions please",
+    "items": [
+      { "quantity": 2 },
+      { "quantity": 1 }
+    ]
+  },
+  "paymentMethods": ["cash", "card", "upi", "wallet"]
+}

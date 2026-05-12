@@ -1,0 +1,9 @@
+{
+  "roles": ["owner", "manager", "waiter", "kitchen"],
+  "permissions": {
+    "owner":   ["menu", "orders", "tables", "settings", "reports", "staff"],
+    "manager": ["menu", "orders", "tables", "settings", "reports"],
+    "waiter":  ["orders", "tables"],
+    "kitchen": ["orders"]
+  }
+}

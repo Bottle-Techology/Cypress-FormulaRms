@@ -1,0 +1,16 @@
+{
+  "menus": [
+    { "name": "[TEST] Breakfast Menu",  "description": "Morning specials" },
+    { "name": "[TEST] Dinner Menu",     "description": "Evening favourites" }
+  ],
+  "categories": [
+    { "name": "[TEST] Starters" },
+    { "name": "[TEST] Mains"    },
+    { "name": "[TEST] Desserts" }
+  ],
+  "items": [
+    { "name": "[TEST] Masala Tea",        "base_price": "80.00",  "food_type": "veg"     },
+    { "name": "[TEST] Chicken Momo",      "base_price": "200.00", "food_type": "non_veg" },
+    { "name": "[TEST] Chocolate Cake",    "base_price": "250.00", "food_type": "veg"     }
+  ]
+}

@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Cypress artifacts
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/
+cypress/reports/
+cypress/fixtures/stuck-orders.json
+
+# JMeter results (generated output)
+jmeter/results/
+
+# JMeter binary (large, downloaded separately)
+jmeter/jmeter-bin/
+
+# Logs
+jmeter.log
+*.log
+
+# Environment / secrets
+.env
+.env.*
+/tmp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+.idea/
+*.code-workspace

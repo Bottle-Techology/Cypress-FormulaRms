@@ -1,0 +1,74 @@
+name: Cypress CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      otp_code:
+        description: 'OTP code for authentication'
+        required: true
+        type: string
+      suite:
+        description: 'Test suite to run'
+        required: false
+        default: 'smoke'
+        type: choice
+        options:
+          - smoke
+          - functional
+          - order-suite
+          - menu-suite
+          - quality
+          - security-suite
+          - reports-suite
+          - regression
+          - gsheet
+          - full-flow
+
+jobs:
+  cypress-run:
+    name: Cypress – ${{ github.event.inputs.suite || 'smoke' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Cypress tests
+        uses: cypress-io/github-action@v6
+        with:
+          browser: chrome
+          spec: ''
+          command: npm run cy:run:${{ github.event.inputs.suite || 'smoke' }}
+        env:
+          CYPRESS_OTP_CODE: ${{ github.event.inputs.otp_code || secrets.OTP_CODE }}
+          CYPRESS_BASE_URL: https://formularms.bottle.com.np
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots-${{ github.run_number }}
+          path: cypress/screenshots/
+          retention-days: 7
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-reports-${{ github.run_number }}
+          path: cypress/reports/
+          retention-days: 14

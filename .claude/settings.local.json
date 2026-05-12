@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm show *)",
+      "Bash(npm install *)",
+      "Bash(ELECTRON_DISABLE_SANDBOX=1 npx cypress verify)",
+      "Bash(rm -rf /home/bottle/.cache/Cypress)",
+      "Bash(npx cypress *)",
+      "Bash(DISPLAY=:0 /home/bottle/.cache/Cypress/13.17.0/Cypress/Cypress --smoke-test --ping=1)",
+      "Bash(curl -s -X POST https://formularms-api.bottle.com.np/auth/login/send-otp/ -H 'Content-Type: application/json' -d '{\"identifier\":\"pranuj@bottle.com.np\",\"method\":\"email\"}')",
+      "Bash(python3 -m json.tool)"
+    ]
+  }
+}
