@@ -2,88 +2,229 @@
 
 declare namespace Cypress {
   interface Chainable {
+    // ── Auth ───────────────────────────────────────────────────────────────────
+
     /** Visit a page and assert body is visible */
     visitPage(path: string): Chainable<void>;
 
-    /** Send OTP to the given identifier */
+    /** Send login OTP to identifier */
     sendOtp(identifier: string, method?: 'email' | 'sms'): Chainable<Response<any>>;
-
-    /** Send signup OTP to a new identifier */
-    signupSendOtp(identifier: string, method?: 'email' | 'sms'): Chainable<Response<any>>;
-
-    /** Verify signup OTP and store token in localStorage */
-    signupVerifyOtp(identifier: string, code: string, method?: 'email' | 'sms'): Chainable<any>;
 
     /** Verify OTP and store token in localStorage */
     verifyOtp(identifier: string, code: string, method?: 'email' | 'sms'): Chainable<any>;
 
-    /** Inject an existing access token into localStorage */
+    /** Inject an existing access token directly into localStorage */
     setAuthToken(token: string): Chainable<void>;
 
-    /** Authenticate via OTP (requires OTP_CODE env or cached token) */
+    /** Full OTP login — uses cached token, OTP_CODE env, or interactive terminal prompt */
     loginViaApi(identifier?: string, otpCode?: string): Chainable<void>;
 
-    /** Log out and navigate to /login */
+    /** Remove tokens from localStorage and redirect to /login */
     logout(): Chainable<void>;
 
     /** Clear all cookies, localStorage, and sessionStorage */
     clearAuth(): Chainable<void>;
 
-    /** Make an authenticated API request using the stored token */
+    // ── Signup ─────────────────────────────────────────────────────────────────
+
+    /** Send signup OTP */
+    signupSendOtp(identifier: string, method?: 'email' | 'sms'): Chainable<Response<any>>;
+
+    /** Verify signup OTP and store token */
+    signupVerifyOtp(identifier: string, code: string, method?: 'email' | 'sms'): Chainable<any>;
+
+    // ── Core API ───────────────────────────────────────────────────────────────
+
+    /** Authenticated HTTP request — throws if no token is available */
     apiRequest(method: string, endpoint: string, body?: object): Chainable<Response<any>>;
 
-    /** Create a menu via API */
-    createMenuViaApi(name: string, description?: string): Chainable<void>;
+    // ── User Profile ───────────────────────────────────────────────────────────
 
-    /** Create a category via API */
-    createCategoryViaApi(name: string): Chainable<void>;
+    /** GET /auth/me/ — current user profile */
+    getMyProfileViaApi(): Chainable<Response<any>>;
 
-    /** Create an item via API */
-    createItemViaApi(name: string, base_price: string, food_type?: 'veg' | 'non_veg'): Chainable<void>;
+    /** PATCH /auth/me/ — update profile fields */
+    updateMyProfileViaApi(fields: object): Chainable<Response<any>>;
 
-    /** Create an order via API (tableId optional) */
+    /** POST /auth/logout/ — invalidate server session */
+    logoutViaApi(): Chainable<Response<any>>;
+
+    /** POST /auth/change-password/ */
+    changePasswordViaApi(payload: object): Chainable<Response<any>>;
+
+    // ── Settings ───────────────────────────────────────────────────────────────
+
+    /** GET /settings/ */
+    getSettingsViaApi(): Chainable<Response<any>>;
+
+    /** PATCH /settings/ */
+    updateSettingsViaApi(fields: object): Chainable<Response<any>>;
+
+    /** GET /settings/profile/ — restaurant profile */
+    getRestaurantProfileViaApi(): Chainable<Response<any>>;
+
+    /** PATCH /settings/profile/ */
+    updateRestaurantProfileViaApi(fields: object): Chainable<Response<any>>;
+
+    /** GET /restaurant/ */
+    getRestaurantInfoViaApi(): Chainable<Response<any>>;
+
+    // ── Reports ────────────────────────────────────────────────────────────────
+
+    /** GET /reports/sales/?period=<period> (omit period for all-time) */
+    getSalesReportViaApi(period?: 'today' | 'week' | 'month'): Chainable<Response<any>>;
+
+    /** GET /reports/orders/ */
+    getOrdersReportViaApi(): Chainable<Response<any>>;
+
+    /** GET /reports/popular-items/ */
+    getPopularItemsReportViaApi(): Chainable<Response<any>>;
+
+    /** GET /reports/summary/ */
+    getReportsSummaryViaApi(): Chainable<Response<any>>;
+
+    /** GET /dashboard/ */
+    getDashboardViaApi(): Chainable<Response<any>>;
+
+    /** GET /overview/ */
+    getOverviewViaApi(): Chainable<Response<any>>;
+
+    // ── Menu ───────────────────────────────────────────────────────────────────
+
+    /** POST /menu/menus/ */
+    createMenuViaApi(name: string, description?: string): Chainable<Response<any>>;
+
+    /** GET /menu/menus/ */
+    getMenusViaApi(): Chainable<Response<any>>;
+
+    /** DELETE /menu/menus/:id/ */
+    deleteMenuViaApi(menuId: number): Chainable<Response<any>>;
+
+    /** POST /menu/categories/ */
+    createCategoryViaApi(name: string): Chainable<Response<any>>;
+
+    /** GET /menu/categories/ */
+    getCategoriesViaApi(): Chainable<Response<any>>;
+
+    /** DELETE /menu/categories/:id/ */
+    deleteCategoryViaApi(categoryId: number): Chainable<Response<any>>;
+
+    /** POST /menu/items/ */
+    createItemViaApi(name: string, base_price: string, food_type?: 'veg' | 'non_veg'): Chainable<Response<any>>;
+
+    /** GET /menu/items/?<params> */
+    getItemsViaApi(params?: Record<string, string | number>): Chainable<Response<any>>;
+
+    /** DELETE /menu/items/:id/ */
+    deleteItemViaApi(itemId: number): Chainable<Response<any>>;
+
+    /** GET /menu/customization-groups/ */
+    getCustomizationGroupsViaApi(): Chainable<Response<any>>;
+
+    // ── Orders ─────────────────────────────────────────────────────────────────
+
+    /** POST /orders/ — creates dine_in (if tableId given) or takeaway */
     createOrderViaApi(tableId?: number | null, items?: object[], note?: string): Chainable<Response<any>>;
 
-    /** Update an order's status via API */
+    /** GET /orders/?<params> */
+    getOrdersViaApi(params?: Record<string, string | number>): Chainable<Response<any>>;
+
+    /** GET /orders/?status=<status> */
+    getOrdersByStatusViaApi(status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'paid'): Chainable<Response<any>>;
+
+    /** GET /orders/?type=<type> */
+    getOrdersByTypeViaApi(type: 'dine_in' | 'takeaway'): Chainable<Response<any>>;
+
+    /** PATCH /orders/:id/ {status} */
     updateOrderStatusViaApi(orderId: number, status: string): Chainable<Response<any>>;
 
-    /** Add an item to an existing order via API */
+    /** POST /orders/:id/add_items/ */
     addItemToOrderViaApi(orderId: number, itemId: number, quantity?: number): Chainable<Response<any>>;
 
-    /** Generate a bill for an order via API */
+    /** POST /orders/:id/bill/ */
     generateBillViaApi(orderId: number): Chainable<Response<any>>;
 
-    /** Open a table (mark as occupied) via API */
+    /** PATCH /orders/:id/ {status: 'cancelled'} */
+    cancelOrderViaApi(orderId: number): Chainable<Response<any>>;
+
+    /** DELETE /orders/:id/ */
+    deleteOrderViaApi(orderId: number): Chainable<Response<any>>;
+
+    /** PATCH /orders/:id/ {status: 'paid'} */
+    markOrderPaidViaApi(orderId: number): Chainable<Response<any>>;
+
+    // ── Tables ─────────────────────────────────────────────────────────────────
+
+    /** GET /tables/?<params> */
+    getTablesViaApi(params?: Record<string, string>): Chainable<Response<any>>;
+
+    /** GET /tables/sections/ */
+    getTableSectionsViaApi(): Chainable<Response<any>>;
+
+    /** POST /tables/ */
+    createTableViaApi(name: string, sectionId: string, capacity?: number): Chainable<Response<any>>;
+
+    /** DELETE /tables/:id/ */
+    deleteTableViaApi(tableId: number): Chainable<Response<any>>;
+
+    /** POST /tables/:id/open/ */
     openTableViaApi(tableId: number): Chainable<Response<any>>;
 
-    /** Close a table (mark as available) via API */
+    /** POST /tables/:id/close/ */
     closeTableViaApi(tableId: number): Chainable<Response<any>>;
 
-    /** Update a table status via API */
+    /** PATCH /tables/:id/ */
     updateTableStatusViaApi(tableId: number, status: string): Chainable<Response<any>>;
 
-    /** Navigate to the /overview dashboard */
+    // ── Printers ───────────────────────────────────────────────────────────────
+
+    /** GET /printers/ */
+    getPrintersViaApi(): Chainable<Response<any>>;
+
+    // ── Navigation ─────────────────────────────────────────────────────────────
+
+    /** Navigate to /overview */
     goToDashboard(): Chainable<void>;
 
-    /** Navigate to the /reports page */
+    /** Navigate to /reports */
     goToReports(): Chainable<void>;
 
-    /** Navigate to the /menu page */
+    /** Navigate to /menu */
     goToMenuPage(): Chainable<void>;
 
-    /** Navigate to the /orders page */
+    /** Navigate to /orders */
     goToOrders(): Chainable<void>;
 
-    /** Navigate to the /tables page */
+    /** Navigate to /tables */
     goToTables(): Chainable<void>;
 
-    /** Navigate to the /settings page */
+    /** Navigate to /settings */
     goToSettings(): Chainable<void>;
 
-    /** Click a sidebar/nav link by label */
+    /** Navigate to /profile */
+    goToProfile(): Chainable<void>;
+
+    /** Navigate to /login */
+    goToLogin(): Chainable<void>;
+
+    /** Navigate to /signup */
+    goToSignup(): Chainable<void>;
+
+    // ── UI Helpers ─────────────────────────────────────────────────────────────
+
+    /** Click a sidebar/nav link by exact label (case-insensitive) */
     clickSidebarLink(label: string): Chainable<void>;
 
-    /** Wait for page to finish loading (no spinners/skeletons) */
+    /** Wait for spinners/skeletons to disappear before continuing */
     waitForPageLoad(): Chainable<void>;
+
+    /** Wait for an intercepted API call and assert 2xx response */
+    waitForApiResponse(alias: string): Chainable<void>;
+
+    /** Assert zero console errors on the current page */
+    assertNoConsoleErrors(): Chainable<void>;
+
+    /** Click a profile tab by name (Personal Info, Security, Preferences, etc.) */
+    switchProfileTab(tabName: string): Chainable<void>;
   }
 }

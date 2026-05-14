@@ -1,0 +1,188 @@
+name: Cypress E2E Tests
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: 'Test suite to run (smoke | functional | regression | all)'
+        required: false
+        default: 'smoke'
+
+concurrency:
+  group: cypress-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Job 1: Smoke – fast gate on every push ──────────────────────────────────
+  smoke:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run smoke tests
+        env:
+          OTP_CODE: ${{ secrets.OTP_CODE }}
+          CYPRESS_OTP_CODE: ${{ secrets.OTP_CODE }}
+        run: |
+          npx cypress run \
+            --browser chrome \
+            --headless \
+            --spec 'cypress/e2e/02-homepage.cy.js,cypress/e2e/03-auth.cy.js,cypress/e2e/18-api-health.cy.js' \
+            --reporter mochawesome \
+            --reporter-options reportDir=cypress/reports/smoke,overwrite=false,html=false,json=true
+
+      - name: Upload smoke report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-report-${{ github.run_number }}
+          path: cypress/reports/smoke/
+          retention-days: 14
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-screenshots-${{ github.run_number }}
+          path: cypress/screenshots/
+          retention-days: 7
+
+  # ── Job 2: Regression – full suite on PR / manual trigger ──────────────────
+  regression:
+    name: Regression Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: smoke
+    if: |
+      github.event_name == 'pull_request' ||
+      github.event_name == 'workflow_dispatch'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        suite:
+          - name: auth-profile
+            spec: >-
+              cypress/e2e/03-auth.cy.js,
+              cypress/e2e/32-user-profile.cy.js,
+              cypress/e2e/33-profile-buttons.cy.js,
+              cypress/e2e/34-preferences-buttons.cy.js
+          - name: orders
+            spec: >-
+              cypress/e2e/07-orders.cy.js,
+              cypress/e2e/14-order-lifecycle.cy.js,
+              cypress/e2e/15-billing.cy.js,
+              cypress/e2e/16-table-sessions.cy.js
+          - name: menu-settings
+            spec: >-
+              cypress/e2e/04-menu.cy.js,
+              cypress/e2e/05-categories.cy.js,
+              cypress/e2e/06-items.cy.js,
+              cypress/e2e/09-settings.cy.js
+          - name: security-quality
+            spec: >-
+              cypress/e2e/19-permissions.cy.js,
+              cypress/e2e/22-security.cy.js,
+              cypress/e2e/35-signup-comprehensive.cy.js
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ${{ matrix.suite.name }} suite
+        env:
+          OTP_CODE: ${{ secrets.OTP_CODE }}
+          CYPRESS_OTP_CODE: ${{ secrets.OTP_CODE }}
+        run: |
+          npx cypress run \
+            --browser chrome \
+            --headless \
+            --retries 2 \
+            --spec '${{ matrix.suite.spec }}' \
+            --reporter mochawesome \
+            --reporter-options reportDir=cypress/reports/${{ matrix.suite.name }},overwrite=false,html=false,json=true
+
+      - name: Upload ${{ matrix.suite.name }} report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-${{ matrix.suite.name }}-${{ github.run_number }}
+          path: cypress/reports/${{ matrix.suite.name }}/
+          retention-days: 30
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-${{ matrix.suite.name }}-${{ github.run_number }}
+          path: cypress/screenshots/
+          retention-days: 14
+
+  # ── Job 3: Merge + publish HTML report ─────────────────────────────────────
+  report:
+    name: Merge & Publish Report
+    runs-on: ubuntu-latest
+    needs: regression
+    if: always() && needs.regression.result != 'skipped'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download all reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: report-*-${{ github.run_number }}
+          path: cypress/reports/
+
+      - name: Merge mochawesome reports
+        run: |
+          find cypress/reports -name 'mochawesome*.json' | head -5
+          npx mochawesome-merge 'cypress/reports/**/*.json' > cypress/reports/merged.json || true
+
+      - name: Generate HTML report
+        run: |
+          npx marge cypress/reports/merged.json -f report -o cypress/reports/html || true
+
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report-${{ github.run_number }}
+          path: cypress/reports/html/
+          retention-days: 30

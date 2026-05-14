@@ -1,0 +1,18 @@
+{
+  "identifier": "pranuj@bottle.com.np",
+  "displayName": "Pranuj QA",
+  "authBase": "https://formularms-api.bottle.com.np",
+  "apiBase": "https://formularms-api.bottle.com.np/api/v1",
+  "testPrefix": "[TEST]",
+  "otpMethod": "email",
+  "timeouts": {
+    "default": 10000,
+    "pageLoad": 30000,
+    "api": 15000
+  },
+  "viewports": {
+    "desktop": { "width": 1280, "height": 720 },
+    "tablet":  { "width": 768,  "height": 1024 },
+    "mobile":  { "width": 375,  "height": 667 }
+  }
+}
