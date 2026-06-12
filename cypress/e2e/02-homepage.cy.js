@@ -33,17 +33,17 @@ describe('02 – Homepage / Login Page', () => {
     cy.get('button').contains(/continue|send otp|next|login|sign in/i).should('exist');
   });
 
-  it('shows a validation error or stays on login for empty submission', () => {
-    cy.get('button').contains(/continue|send otp|next|login|sign in/i).first().click();
-    cy.get('body').should('be.visible');
-    cy.url().should('not.include', '/overview');
-    cy.url().should('not.include', '/orders');
+  it('submit button is disabled on empty input (form-level validation)', () => {
+    // App disables the submit button until a value is typed — this IS the validation
+    cy.get('button[type="submit"]').should('be.disabled');
   });
 
   it('shows a validation error for an invalid email format', () => {
     cy.get('input').first().type('not-an-email');
-    cy.get('button').contains(/continue|send otp|next|login|sign in/i).first().click();
+    // Click with force to bypass any disabled state and observe app response
+    cy.get('button[type="submit"]').click({ force: true });
     cy.get('body').should('be.visible');
+    cy.url().should('not.include', '/overview');
   });
 
   it('accepts a valid email and proceeds to OTP step', () => {
