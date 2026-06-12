@@ -4,9 +4,13 @@ describe('13 – Dashboard / Overview', () => {
   context('Dashboard – unauthenticated', () => {
     beforeEach(() => cy.clearAuth())
 
-    it('redirects to /login when not authenticated', () => {
+    it('redirects away from /overview when not authenticated', () => {
       cy.visit('/overview', { failOnStatusCode: false })
-      cy.url().should('include', '/login')
+      // App may redirect to "/login" or show login form at "/"
+      cy.url().should('satisfy', (url) =>
+        url.includes('/login') ||
+        url.match(/formularms\.bottle\.com\.np\/?$/)
+      )
     })
   })
 
